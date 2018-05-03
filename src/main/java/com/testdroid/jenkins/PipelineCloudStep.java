@@ -85,6 +85,8 @@ public class PipelineCloudStep extends AbstractStepImpl {
     private String withAnnotation;
     private String withoutAnnotation;
     private String testTimeout;
+    private String cloudUrl;
+    private String apiKey;
 
     // these variables are used to create a WaitForResultsBlock
     private boolean waitForResults;
@@ -227,6 +229,16 @@ public class PipelineCloudStep extends AbstractStepImpl {
         this.forceFinishAfterBreak = forceFinishAfterBreak;
     }
 
+    @DataBoundSetter
+    public void setCloudUrl(String cloudUrl) {
+        this.cloudUrl = cloudUrl;
+    }
+
+    @DataBoundSetter
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
 
     public String getTestRunName() {
         return testRunName;
@@ -330,6 +342,10 @@ public class PipelineCloudStep extends AbstractStepImpl {
         return resultsPath;
     }
 
+    public String getCloudUrl() { return cloudUrl; }
+
+    public String getApiKey() { return apiKey; }
+
     public boolean isDownloadScreenshots() {
         return downloadScreenshots;
     }
@@ -409,7 +425,9 @@ public class PipelineCloudStep extends AbstractStepImpl {
                     step.getNotificationEmailType(),
                     step.isFailBuildIfThisStepFailed(),
                     waitForResultsBlock,
-                    step.getTestTimeout()
+                    step.getTestTimeout(),
+                    step.getCloudUrl(),
+                    step.getApiKey()
             );
 
             if(!builder.completeRun(run, workspace, launcher, listener)) {

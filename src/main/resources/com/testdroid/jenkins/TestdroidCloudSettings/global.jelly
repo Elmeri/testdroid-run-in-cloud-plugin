@@ -6,6 +6,9 @@
         <f:entry
                 field="authorize"/>
         <f:block>
+
+
+
             <f:entry
                     title="${%Email}">
                 <f:textbox name="email" value="${descriptor.getEmail()}"/>
@@ -13,6 +16,10 @@
             <f:entry
                     title="${%Password}">
                 <f:password name="password" value="${descriptor.getPassword()}"/>
+            </f:entry>
+            <f:entry
+                    title="${%ApiKey}">
+                <f:textbox name="apiKey" value="${descriptor.getApiKey()}"/>
             </f:entry>
             <f:block>
                 <f:optionalBlock name="privateInstanceState" title="${%Bitbar Cloud - private instance}"
@@ -57,7 +64,7 @@
                     title="${%Authorize}"
                     progress="${%Authorizing...}"
                     method="authorize"
-                    with="email,password,userManagementUrl,cloudUrl,privateInstanceState,noCheckCertificate,isProxy,proxyHost,proxyPort,proxyUser,proxyPassword"/>
+                    with="email,password,userManagementUrl,cloudUrl,privateInstanceState,noCheckCertificate,isProxy,proxyHost,proxyPort,proxyUser,proxyPassword, apiKey, authenticationType"/>
         </f:block>
 
         <f:block>

@@ -5,6 +5,8 @@ import com.testdroid.api.APIException;
 import com.testdroid.api.APIQueryBuilder;
 import com.testdroid.api.model.*;
 import com.testdroid.api.model.APITestRunConfig.Scheduler;
+import com.testdroid.api.APIKeyClient;
+import com.testdroid.api.APIClient;
 import com.testdroid.jenkins.model.TestRunStateCheckMethod;
 import com.testdroid.jenkins.remotesupport.MachineIndependentFileUploader;
 import com.testdroid.jenkins.remotesupport.MachineIndependentResultsDownloader;
@@ -91,6 +93,12 @@ public class RunInCloudBuilder extends AbstractBuilder {
 
     private String testTimeout;
 
+    private String cloudUrl;
+
+    private String apiKey;
+
+    private APIClient client;
+
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
     public RunInCloudBuilder(
@@ -98,7 +106,7 @@ public class RunInCloudBuilder extends AbstractBuilder {
             String testRunner, String clusterId, String language, String notificationEmail, String screenshotsDirectory,
             String keyValuePairs, String withAnnotation, String withoutAnnotation, String testCasesSelect,
             String testCasesValue, String notificationEmailType, Boolean failBuildIfThisStepFailed,
-            WaitForResultsBlock waitForResultsBlock, String testTimeout) {
+            WaitForResultsBlock waitForResultsBlock, String testTimeout, String cloudUrl, String apiKey) {
         this.projectId = projectId;
         this.appPath = appPath;
         this.dataPath = dataPath;
@@ -119,6 +127,8 @@ public class RunInCloudBuilder extends AbstractBuilder {
         this.failBuildIfThisStepFailed = failBuildIfThisStepFailed;
         this.testTimeout = testTimeout;
         this.waitForResultsBlock = waitForResultsBlock;
+        this.cloudUrl = cloudUrl;
+        this.apiKey = apiKey;
     }
 
     public String getTestRunName() {
@@ -271,6 +281,23 @@ public class RunInCloudBuilder extends AbstractBuilder {
         this.testTimeout = testTimeout;
     }
 
+    public String getCloudUrl() {
+        return cloudUrl;
+    }
+
+    public void setCloudUrl(String cloudUrl) {
+        this.cloudUrl = cloudUrl;
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
+
     public WaitForResultsBlock getWaitForResultsBlock() {
         return waitForResultsBlock;
     }
@@ -376,6 +403,10 @@ public class RunInCloudBuilder extends AbstractBuilder {
         TestdroidCloudSettings plugin = TestdroidCloudSettings.getInstance();
         boolean releaseDone = false;
 
+        String cloudUrlGlobal = descriptor.getCloudUrl();
+        String apiKeyGlobal = descriptor.getApiKey();
+        boolean useApiKeyGlobal = descriptor.isUseApiKey();
+
         try {
             // make part update and run project "transactional"
             plugin.getSemaphore().acquire();
@@ -383,6 +414,13 @@ public class RunInCloudBuilder extends AbstractBuilder {
             if (!verifyParameters(listener)) {
                 return false;
             }
+
+            if (this.getApiKey() != null){
+                descriptor.setCloudUrl(this.getCloudUrl());
+                descriptor.setApiKey(this.getApiKey());
+                descriptor.setUseApiKey(true);
+            }
+
             APIUser user = descriptor.getUser();
 
             final APIProject project = user.getProject(Long.parseLong(this.projectId.trim()));
@@ -476,7 +514,9 @@ public class RunInCloudBuilder extends AbstractBuilder {
             RunInCloudEnvInject variable = new RunInCloudEnvInject("CLOUD_LINK", cloudLink);
             build.addAction(variable);
 
-
+            descriptor.setCloudUrl(cloudUrlGlobal);
+            descriptor.setApiKey(apiKeyGlobal);
+            descriptor.setUseApiKey(useApiKeyGlobal);
             plugin.getSemaphore().release();
             releaseDone = true;
 
@@ -496,6 +536,9 @@ public class RunInCloudBuilder extends AbstractBuilder {
             LOGGER.log(Level.WARNING, Messages.NO_DEVICE_GROUP_CHOSEN());
         } finally {
             if (!releaseDone) {
+                descriptor.setCloudUrl(cloudUrlGlobal);
+                descriptor.setApiKey(apiKeyGlobal);
+                descriptor.setUseApiKey(useApiKeyGlobal);
                 plugin.getSemaphore().release();
             }
         }

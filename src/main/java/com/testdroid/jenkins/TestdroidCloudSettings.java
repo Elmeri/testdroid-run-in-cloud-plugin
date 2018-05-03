@@ -1,6 +1,7 @@
 package com.testdroid.jenkins;
 
 import com.testdroid.api.APIClient;
+import com.testdroid.api.APIKeyClient;
 import com.testdroid.api.APIException;
 import com.testdroid.api.model.APINotificationEmail;
 import com.testdroid.api.model.APIUser;
@@ -86,6 +87,12 @@ public class TestdroidCloudSettings extends Plugin implements Describable<Testdr
 
         private String newCloudUrl;
 
+        private String apiKey;
+
+        private boolean useApiKey = false;
+
+        private APIClient client;
+
         private String email;
 
         private boolean isProxy;
@@ -134,12 +141,17 @@ public class TestdroidCloudSettings extends Plugin implements Describable<Testdr
         }
 
         private APIClient getTestdroidAPIClient() {
-            return TestdroidApiUtil.isInitialized()
-                    ? TestdroidApiUtil.getInstance().getTestdroidAPIClient()
-                    : TestdroidApiUtil.init(
-                    email, getPassword(), cloudUrl, privateInstanceState,
-                    noCheckCertificate, isProxy, proxyHost, proxyPort,
-                    proxyUser, getProxyPassword()).getTestdroidAPIClient();
+            if (useApiKey) {
+                client = new APIKeyClient(cloudUrl, apiKey);
+                return client;
+            } else {
+                return TestdroidApiUtil.isInitialized()
+                        ? TestdroidApiUtil.getInstance().getTestdroidAPIClient()
+                        : TestdroidApiUtil.init(
+                        email, getPassword(), cloudUrl, privateInstanceState,
+                        noCheckCertificate, isProxy, proxyHost, proxyPort,
+                        proxyUser, getProxyPassword()).getTestdroidAPIClient();
+            }
         }
 
         public APIUser getUser() throws APIException {
@@ -162,7 +174,7 @@ public class TestdroidCloudSettings extends Plugin implements Describable<Testdr
                 @QueryParameter String email, @QueryParameter String password, @QueryParameter String cloudUrl,
                 @QueryParameter boolean privateInstanceState, @QueryParameter boolean noCheckCertificate,
                 @QueryParameter boolean isProxy, @QueryParameter String proxyHost, @QueryParameter Integer proxyPort,
-                @QueryParameter String proxyUser, @QueryParameter String proxyPassword) {
+                @QueryParameter String proxyUser, @QueryParameter String proxyPassword, @QueryParameter String apiKey) {
 
             FormValidation validation = null;
             TestdroidApiUtil.clean();
@@ -174,6 +186,7 @@ public class TestdroidCloudSettings extends Plugin implements Describable<Testdr
                 this.noCheckCertificate = noCheckCertificate;
                 this.isProxy = isProxy;
                 this.privateInstanceState = privateInstanceState;
+                this.apiKey = apiKey;
 
                 if (isProxy) {
                     this.proxyHost = proxyHost;
@@ -252,6 +265,14 @@ public class TestdroidCloudSettings extends Plugin implements Describable<Testdr
             this.cloudUrl = cloudUrl;
         }
 
+        public boolean isUseApiKey() {
+            return useApiKey;
+        }
+
+        public void setUseApiKey(boolean useApiKey) {
+            this.useApiKey = useApiKey;
+        }
+
         @Exported
         public String getNewCloudUrl() {
             return newCloudUrl;
@@ -260,6 +281,14 @@ public class TestdroidCloudSettings extends Plugin implements Describable<Testdr
         @Exported
         public void setNewCloudUrl(String newCloudUrl) {
             this.newCloudUrl = newCloudUrl;
+        }
+
+        public String getApiKey() {
+            return apiKey;
+        }
+
+        public void setApiKey(String apiKey) {
+            this.apiKey = apiKey;
         }
 
         @Exported
